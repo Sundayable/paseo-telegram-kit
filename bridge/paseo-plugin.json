@@ -1,0 +1,6 @@
+{
+  "id": "telegram-orchestrator",
+  "requirements": {
+    "paseo": ">=0.9.0"
+  }
+}

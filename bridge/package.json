@@ -1,0 +1,28 @@
+{
+  "name": "paseo-telegram-orchestrator",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "files": [
+    "paseo-plugin.json",
+    "index.server.ts",
+    "server/"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "PASEO_TELEGRAM_CONFIG=tests/fixtures/settings.json node --test tests/*.test.ts",
+    "check": "npm run typecheck && npm test"
+  },
+  "devDependencies": {
+    "@getpaseo/plugin": "0.9.1",
+    "@getpaseo/protocol": "0.9.1",
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.3",
+    "zod": "^4.4.3"
+  },
+  "dependencies": {
+    "@getpaseo/client": "0.9.1"
+  },
+  "license": "MIT",
+  "description": "Telegram bridge plugin for Paseo: one orchestrator seat you talk to from your phone"
+}

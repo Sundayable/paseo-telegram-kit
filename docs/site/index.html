@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>텔레그램 오케 키트 · 휴대폰으로 내 Mac의 AI에게 일 시키기</title>
+<meta name="description" content="텔레그램 봇에게 한 줄 보내면 Mac의 Paseo 에이전트들이 일을 나눠 하고, 끝나면 텔레그램으로 알려 줘요. 무료 오픈소스(MIT), 5분 설치.">
+<link rel="canonical" href="https://proof.getsundayable.com/telegram-kit/">
+<link rel="alternate" hreflang="ko" href="https://proof.getsundayable.com/telegram-kit/">
+<link rel="alternate" hreflang="en" href="https://proof.getsundayable.com/telegram-kit/?lang=en">
+<link rel="icon" href="favicon.ico" sizes="32x32">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#F5F3EE">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Sundayable">
+<meta property="og:url" content="https://proof.getsundayable.com/telegram-kit/">
+<meta property="og:title" content="텔레그램 오케 키트 · 휴대폰으로 내 Mac의 AI에게 일 시키기">
+<meta property="og:description" content="텔레그램 봇에게 한 줄 보내면 Mac의 Paseo 에이전트들이 일을 나눠 하고, 끝나면 알려 줘요. 무료, 5분 설치.">
+<meta property="og:image" content="https://proof.getsundayable.com/telegram-kit/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="텔레그램 오케 키트: 휴대폰 텔레그램으로 내 Mac의 AI에게 일 시키기">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Paseo Telegram Kit · Run the AI on your Mac from Telegram">
+<meta name="twitter:description" content="Message your own Telegram bot; Paseo agents on your Mac do the work and report back. Free, five-minute setup.">
+<meta name="twitter:image" content="https://proof.getsundayable.com/telegram-kit/og.png">
+<link rel="stylesheet" href="https://brand.sundayable.ca/downloads/v2/fonts/fonts.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+  :root {
+    --paper: #F5F3EE; --card: #FCFBF8; --ink: #1B2233; --night: #0A0F1E; --slate: #6A7389;
+    --dust: #CCBFBC; --line: #DDD9D0; --muted: #4F5768; --horizon: #82BCE2; --ok: #3E7C4F;
+    --display: "Gabarito", "Pretendard Variable", system-ui, sans-serif;
+    --body: "Figtree", "Pretendard Variable", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 17px/1.65 var(--body); word-break: keep-all; overflow-wrap: break-word; }
+  body.en [lang="ko"], body:not(.en) [lang="en"] { display: none !important; }
+  a { color: var(--ink); }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 22px; }
+
+
+  header.top .wrap { display: flex; align-items: center; justify-content: space-between; padding-top: 18px; padding-bottom: 18px; }
+  .brand { display: flex; align-items: center; gap: 10px; font: 600 15px var(--display); text-decoration: none; }
+  .brand img { height: 20px; display: block; }
+  .langs { display: flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; background: var(--card); }
+  .langs button { border: 0; background: none; padding: 7px 14px; font: 600 14px var(--body); color: var(--muted); cursor: pointer; }
+  .langs button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+
+  .hero { padding: 40px 0 56px; }
+  .eyebrow { font: 600 12.5px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  h1 { font: 700 clamp(34px, 6.2vw, 62px)/1.12 var(--display); letter-spacing: -0.02em; margin: 16px 0 18px; max-width: 15em; }
+  .lead { font-size: clamp(18px, 2.3vw, 21px); color: var(--muted); max-width: 34em; margin: 0 0 28px; }
+  .cta { display: flex; flex-wrap: wrap; gap: 12px; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; border-radius: 10px; padding: 13px 20px; font: 600 16px var(--body); border: 1px solid var(--ink); cursor: pointer; text-decoration: none; }
+  .btn.solid { background: var(--ink); color: var(--paper); }
+  .btn.ghost { background: transparent; color: var(--ink); }
+
+  .flow { margin-top: 44px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; background: var(--card); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+  .flow > div { padding: 22px 20px; position: relative; border-right: 1px solid var(--line); }
+  .flow > div:last-child { border-right: 0; }
+  .flow .n { font: 600 12px var(--mono); color: var(--muted); }
+  .flow h3 { font: 700 19px/1.3 var(--display); margin: 8px 0 6px; }
+  .flow p { margin: 0; font-size: 15px; color: var(--muted); }
+  .flow > div:not(:last-child)::after { content: "→"; position: absolute; right: -11px; top: 22px; width: 22px; height: 22px; border-radius: 50%; background: var(--paper); border: 1px solid var(--line); font-size: 12px; display: grid; place-items: center; z-index: 1; }
+
+  section { padding: 56px 0; border-top: 1px solid var(--line); }
+  h2 { font: 700 clamp(26px, 3.6vw, 36px)/1.2 var(--display); letter-spacing: -0.01em; margin: 0 0 10px; }
+  .sub { color: var(--muted); margin: 0 0 30px; max-width: 38em; }
+
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+  .card h3 { font: 700 18px/1.35 var(--display); margin: 0 0 6px; }
+  .card p { margin: 0; color: var(--muted); font-size: 15.5px; }
+  .chat { font-size: 14.5px; margin-top: 12px; display: grid; gap: 6px; }
+  .bubble { padding: 8px 12px; border-radius: 12px; max-width: 92%; line-height: 1.45; }
+  .bubble.me { background: var(--ink); color: var(--paper); justify-self: end; border-bottom-right-radius: 4px; }
+  .bubble.bot { background: var(--surface, #ECE9E2); justify-self: start; border-bottom-left-radius: 4px; }
+
+  .steps { counter-reset: s; display: grid; gap: 12px; padding: 0; margin: 0; list-style: none; }
+  .steps li { counter-increment: s; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px 18px 70px; position: relative; }
+  .steps li::before { content: counter(s); position: absolute; left: 20px; top: 18px; width: 32px; height: 32px; border-radius: 50%; background: var(--ink); color: var(--paper); font: 700 15px/32px var(--display); text-align: center; }
+  .steps h3 { font: 700 18px/1.35 var(--display); margin: 3px 0 4px; }
+  .steps p { margin: 0; color: var(--muted); font-size: 15.5px; }
+  .who { display: inline-block; font: 600 11.5px/1 var(--mono); letter-spacing: .06em; padding: 4px 7px; border-radius: 4px; margin-left: 6px; vertical-align: 2px; border: 1px solid var(--line); color: var(--muted); }
+  .who.you { border-color: var(--ink); color: var(--ink); }
+  .time { font: 500 13px var(--mono); color: var(--muted); }
+
+  .paste { background: var(--night); color: var(--paper); border-radius: 18px; padding: 26px; margin-top: 26px; }
+  .paste .label { font: 600 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--dust); }
+  .paste pre { margin: 12px 0 18px; white-space: pre-wrap; font: 500 15.5px/1.6 var(--mono); color: #fff; }
+  .paste .btn { border-color: var(--paper); background: var(--paper); color: var(--ink); }
+  .paste .hint { color: var(--dust); font-size: 14px; margin: 14px 0 0; }
+
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  ul.clean { margin: 0; padding-left: 20px; }
+  ul.clean li { margin: 6px 0; }
+  details { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 4px 18px; margin-bottom: 10px; }
+  summary { cursor: pointer; font: 600 16.5px/1.4 var(--display); padding: 14px 0; list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; float: right; color: var(--muted); }
+  details[open] summary::after { content: "–"; }
+  details p { margin: 0 0 16px; color: var(--muted); font-size: 15.5px; }
+  code { font: 500 .92em var(--mono); background: #ECE9E2; padding: 1px 6px; border-radius: 5px; }
+
+  footer { padding: 40px 0 60px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); }
+  footer .wrap { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; align-items: center; }
+  footer img { height: 18px; }
+  .toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px); background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 10px; font-size: 14.5px; opacity: 0; transition: .2s; pointer-events: none; }
+  .toast.on { opacity: 1; transform: translateX(-50%); }
+
+  @media (max-width: 820px) {
+    .flow { grid-template-columns: 1fr 1fr; }
+    .flow > div:nth-child(2) { border-right: 0; }
+    .flow > div:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+    .flow > div:not(:last-child)::after { display: none; }
+    .grid { grid-template-columns: 1fr; }
+    .two { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 520px) {
+    body { font-size: 16px; }
+    .flow { grid-template-columns: 1fr; }
+    .flow > div { border-right: 0; border-bottom: 1px solid var(--line); }
+    .steps li { padding-left: 62px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="https://sundayable.com" aria-label="Sundayable">
+      <img src="https://brand.sundayable.ca/downloads/v2/logos/sundayable-wordmark-ink.svg" alt="Sundayable">
+    </a>
+    <div class="langs" role="group" aria-label="Language">
+      <button type="button" data-set="ko" aria-pressed="true">한국어</button>
+      <button type="button" data-set="en" aria-pressed="false">English</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="hero">
+    <div class="wrap">
+      <div class="eyebrow"><span lang="ko">Paseo 무료 키트 · 오픈소스</span><span lang="en">A free, open-source kit for Paseo</span></div>
+      <h1>
+        <span lang="ko">휴대폰 텔레그램으로 내 Mac의 AI에게 일 시키기</span>
+        <span lang="en">Run the AI on your Mac from Telegram on your phone</span>
+      </h1>
+      <p class="lead">
+        <span lang="ko">봇에게 한 줄 보내면 Mac에서 돌아가는 AI 에이전트들이 일을 나눠 하고, 끝나면 텔레그램으로 알려 줘요. 설치는 Paseo에 문장 하나 붙여넣는 걸로 시작해요.</span>
+        <span lang="en">Send your bot one line and the AI agents on your Mac split the work between them, then tell you in Telegram when it's done. Setup starts by pasting one sentence into Paseo.</span>
+      </p>
+      <div class="cta">
+        <button class="btn solid" type="button" data-copy="#paste-text"><span lang="ko">설치 문장 복사</span><span lang="en">Copy the setup line</span></button>
+        <a class="btn ghost" href="#setup"><span lang="ko">설치 순서 보기</span><span lang="en">See the steps</span></a>
+        <a class="btn ghost" href="https://github.com/Sundayable/paseo-telegram-kit"><span lang="ko">GitHub에서 보기</span><span lang="en">View on GitHub</span></a>
+      </div>
+
+      <div class="flow" aria-label="How it works">
+        <div><span class="n">01</span><h3><span lang="ko">휴대폰</span><span lang="en">Your phone</span></h3><p><span lang="ko">텔레그램에서 내 봇에게 메시지·사진·파일을 보내요.</span><span lang="en">Message your bot in Telegram: text, photos, files.</span></p></div>
+        <div><span class="n">02</span><h3><span lang="ko">내 봇</span><span lang="en">Your bot</span></h3><p><span lang="ko">나만의 봇이라 내 계정 메시지에만 답해요.</span><span lang="en">Your own bot. It answers only your account.</span></p></div>
+        <div><span class="n">03</span><h3><span lang="ko">오케</span><span lang="en">The orchestrator</span></h3><p><span lang="ko">Mac의 Paseo 안에서 일을 쪼개고 맡기고 확인해요.</span><span lang="en">Inside Paseo on your Mac, it splits, delegates and checks.</span></p></div>
+        <div><span class="n">04</span><h3><span lang="ko">작업자들</span><span lang="en">Workers</span></h3><p><span lang="ko">Claude·Codex 에이전트가 실제 작업을 해요.</span><span lang="en">Claude and Codex agents do the actual work.</span></p></div>
+      </div>
+    </div>
+  </div>
+
+  <section>
+    <div class="wrap">
+      <h2><span lang="ko">이런 게 돼요</span><span lang="en">What it does</span></h2>
+      <p class="sub"><span lang="ko">컴퓨터 앞에 없어도 일을 시키고, 결과를 받고, 중요한 건 직접 정해요.</span><span lang="en">Hand off work when you're away from the desk, get the results, and keep the important calls for yourself.</span></p>
+      <div class="grid">
+        <div class="card">
+          <h3><span lang="ko">말하듯 맡기기</span><span lang="en">Just ask</span></h3>
+          <p><span lang="ko">명령어를 몰라도 돼요. 오케가 알맞은 작업자를 골라 맡기고, 끝나면 짧게 보고해요.</span><span lang="en">No commands to learn. The orchestrator picks the right worker and reports back briefly.</span></p>
+          <div class="chat">
+            <div class="bubble me"><span lang="ko">어제 받은 견적서 PDF 요약하고 답장 초안 써 줘</span><span lang="en">Summarize yesterday's quote PDF and draft a reply</span></div>
+            <div class="bubble bot"><span lang="ko">작업자에게 맡겼어요. 끝나면 알려 드릴게요.</span><span lang="en">Handed to a worker. I'll let you know when it's done.</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3><span lang="ko">위험한 일은 먼저 물어봐요</span><span lang="en">Asks before anything risky</span></h3>
+          <p><span lang="ko">메일 발송·게시·결제·삭제처럼 되돌리기 어려운 일은 '예/아니오'로 확인받고 나서 해요.</span><span lang="en">Sending, posting, paying or deleting waits for your yes/no first.</span></p>
+          <div class="chat">
+            <div class="bubble bot"><span lang="ko">초안 준비됐어요. 이대로 보낼까요?</span><span lang="en">Draft is ready. Send it as is?</span></div>
+            <div class="bubble me"><span lang="ko">응</span><span lang="en">yes</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3><span lang="ko">답장으로 이어서 말하기</span><span lang="en">Reply to keep context</span></h3>
+          <p><span lang="ko">봇 메시지에 답장하면 그 내용에 대한 말로 알아들어요. 일하는 중에 보낸 메시지는 모아 뒀다가 순서대로 처리해요.</span><span lang="en">Reply to a message and it knows what you mean. Messages sent while it's busy are queued and handled in order.</span></p>
+        </div>
+        <div class="card">
+          <h3><span lang="ko">세션과 바로 대화</span><span lang="en">Talk to any session</span></h3>
+          <p><span lang="ko"><code>/ls</code>로 돌아가는 세션을 보고, <code>/to 3 …</code>으로 원하는 세션에 바로 말을 걸어요.</span><span lang="en">See running sessions with <code>/ls</code> and message one directly with <code>/to 3 …</code>.</span></p>
+        </div>
+        <div class="card">
+          <h3><span lang="ko">권한 요청은 버튼으로</span><span lang="en">Permission buttons</span></h3>
+          <p><span lang="ko">작업자가 허락을 구하면 텔레그램에 허용·거절 버튼이 떠요. 흔한 건 오케가 알아서 처리해요.</span><span lang="en">When a worker asks permission, Allow/Deny buttons appear. Routine ones the orchestrator handles itself.</span></p>
+        </div>
+        <div class="card">
+          <h3><span lang="ko">한도에 걸려도 이어서</span><span lang="en">Keeps going past limits</span></h3>
+          <p><span lang="ko">Claude 사용량이 다 차면 Codex로 넘어갔다가 풀리면 돌아와요. (Codex 로그인 시)</span><span lang="en">When Claude's usage runs out it switches to Codex, then comes back. (If Codex is logged in.)</span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="setup">
+    <div class="wrap">
+      <h2><span lang="ko">5분 설치</span><span lang="en">Five-minute setup</span></h2>
+      <p class="sub"><span lang="ko">대부분은 Paseo의 AI가 해요. 직접 하실 일에는 <span class="who you">직접</span> 표시를 붙였어요.</span><span lang="en">Paseo's AI does most of it. Steps marked <span class="who you">You</span> need your hands.</span></p>
+      <ol class="steps">
+        <li>
+          <h3><span lang="ko">준비물 확인</span><span lang="en">What you need</span> <span class="time">1 min</span></h3>
+          <p><span lang="ko">Mac, <a href="https://paseo.sh">Paseo</a> 앱, Claude Code(또는 Codex) 로그인, 휴대폰 텔레그램. Node.js가 없으면 AI가 설치를 도와줘요(Mac 암호 한 번).</span><span lang="en">A Mac, the <a href="https://paseo.sh">Paseo</a> app, Claude Code (or Codex) logged in, Telegram on your phone. If Node.js is missing, the AI helps install it (one Mac password).</span></p>
+        </li>
+        <li>
+          <h3><span lang="ko">Paseo에 설치 문장 붙여넣기</span><span lang="en">Paste the setup line into Paseo</span> <span class="who you"><span lang="ko">직접</span><span lang="en">You</span></span></h3>
+          <p><span lang="ko">Paseo에서 새 에이전트(Claude Code)를 열고 아래 문장을 붙여넣어요. 이후 과정은 AI가 한 단계씩 안내해요.</span><span lang="en">Open a new agent (Claude Code) in Paseo and paste the line below. From there the AI guides you step by step.</span></p>
+        </li>
+        <li>
+          <h3><span lang="ko">BotFather로 내 봇 만들기</span><span lang="en">Create your bot with BotFather</span> <span class="who you"><span lang="ko">직접</span><span lang="en">You</span></span> <span class="time">2 min</span></h3>
+          <p><span lang="ko">텔레그램에서 <b>@BotFather</b> → <code>/newbot</code> → 봇 이름 → 영어 아이디(끝은 <code>bot</code>). 받은 토큰은 복사만 하고 채팅창에는 붙여넣지 마세요. AI가 안전하게 옮겨요.</span><span lang="en">In Telegram: <b>@BotFather</b> → <code>/newbot</code> → a name → an English username ending in <code>bot</code>. Copy the token, but don't paste it into the chat — the AI moves it safely.</span></p>
+        </li>
+        <li>
+          <h3><span lang="ko">새 봇 열고 ‘시작’ 누르기</span><span lang="en">Open your bot and tap Start</span> <span class="who you"><span lang="ko">직접</span><span lang="en">You</span></span></h3>
+          <p><span lang="ko">이렇게 하면 이 봇이 내 계정하고만 대화하도록 묶여요. 봇이 “연결됐어요”라고 답해요.</span><span lang="en">This ties the bot to your account only. The bot replies that it's linked.</span></p>
+        </li>
+        <li>
+          <h3><span lang="ko">‘핑’ 보내서 확인</span><span lang="en">Send “ping” to test</span> <span class="who you"><span lang="ko">직접</span><span lang="en">You</span></span> <span class="time">1 min</span></h3>
+          <p><span lang="ko">AI가 연결을 마치면 휴대폰에서 봇에게 <code>핑</code>을 보내요. 첫 답은 30초에서 1분쯤 걸려요. 답이 오면 끝이에요.</span><span lang="en">Once the AI finishes, send <code>ping</code> to your bot. The first answer takes 30–60 seconds. When it arrives, you're done.</span></p>
+        </li>
+      </ol>
+
+      <div class="paste">
+        <div class="label"><span lang="ko">Paseo에 붙여넣을 문장</span><span lang="en">Paste this into Paseo</span></div>
+        <pre id="paste-text"><span lang="ko">텔레그램 오케를 설치해 줘. https://github.com/Sundayable/paseo-telegram-kit 에서 키트를 받아 ~/paseo-telegram-kit 에 두고, 그 안의 SKILL.md를 처음부터 끝까지 따라 해 줘.</span><span lang="en">Set up my Telegram orchestrator: download the kit from https://github.com/Sundayable/paseo-telegram-kit into ~/paseo-telegram-kit, then follow its SKILL.md from start to finish.</span></pre>
+        <button class="btn" type="button" data-copy="#paste-text"><span lang="ko">복사</span><span lang="en">Copy</span></button>
+        <p class="hint"><span lang="ko">한국어로 붙여넣으면 한국어로, 영어로 붙여넣으면 영어로 안내해요.</span><span lang="en">Paste it in English and the guidance is in English; in Korean, it's in Korean.</span></p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap two">
+      <div>
+        <h2><span lang="ko">안전하게 만들었어요</span><span lang="en">Built to be safe</span></h2>
+        <ul class="clean">
+          <li><span lang="ko">봇은 연결한 내 텔레그램 계정에만 답해요. 다른 사람이 말을 걸어도 무시해요.</span><span lang="en">The bot answers only the Telegram account you linked. Anyone else is ignored.</span></li>
+          <li><span lang="ko">토큰은 Mac 안의 비공개 파일에만 저장되고, 화면이나 대화에 찍히지 않아요.</span><span lang="en">The token lives only in a private file on your Mac and is never shown on screen or in chat.</span></li>
+          <li><span lang="ko">발송·게시·결제·삭제·코드 배포는 내 ‘예’가 있어야 해요.</span><span lang="en">Sending, posting, paying, deleting or shipping code needs your “yes”.</span></li>
+          <li><span lang="ko">따로 거쳐 가는 서버가 없어요. 텔레그램과 내 Mac이 바로 주고받아요.</span><span lang="en">No extra server in between: Telegram talks straight to your Mac.</span></li>
+        </ul>
+      </div>
+      <div>
+        <h2><span lang="ko">알아 두면 좋아요</span><span lang="en">Good to know</span></h2>
+        <ul class="clean">
+          <li><span lang="ko">Mac이 켜져 있고 Paseo가 열려 있을 때만 답해요. 충전기에 꽂아 두고 잠자기를 꺼 두면 좋아요.</span><span lang="en">It answers only while your Mac is awake with Paseo open. Keep it plugged in with sleep turned off.</span></li>
+          <li><span lang="ko">AI 사용량은 내 Claude·Codex 요금제에서 나가요.</span><span lang="en">AI usage comes out of your own Claude/Codex plan.</span></li>
+          <li><span lang="ko">음성 메시지는 선택이에요. OpenAI 키를 넣으면 받아써서 전달해요(OpenAI 요금 별도).</span><span lang="en">Voice notes are optional: add an OpenAI key and they're transcribed (billed by OpenAI).</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2><span lang="ko">막혔을 때</span><span lang="en">If something's stuck</span></h2>
+      <p class="sub"><span lang="ko">Paseo 에이전트에게 “텔레그램 오케 점검해 줘”라고 하면 원인을 찾아 고쳐요. 자주 묻는 것들은 이래요.</span><span lang="en">Ask a Paseo agent to “check my Telegram orchestrator” and it finds and fixes the cause. Common ones:</span></p>
+      <details>
+        <summary><span lang="ko">봇이 답을 안 해요</span><span lang="en">The bot doesn't answer</span></summary>
+        <p><span lang="ko">Mac이 잠들었거나 Paseo가 닫혀 있을 때가 대부분이에요. Paseo를 열고 다시 보내 보세요. 그래도 안 되면 점검을 부탁하세요.</span><span lang="en">Usually the Mac is asleep or Paseo is closed. Open Paseo and try again; if not, ask for a check.</span></p>
+      </details>
+      <details>
+        <summary><span lang="ko">토큰을 어떻게 Mac으로 옮기나요?</span><span lang="en">How do I get the token onto the Mac?</span></summary>
+        <p><span lang="ko">아이폰과 Mac이 같은 Apple ID면 휴대폰에서 토큰을 눌러 복사하는 것만으로 Mac에도 복사돼요. 아니면 Mac에서 텔레그램(앱 또는 web.telegram.org)을 열어 복사하면 돼요.</span><span lang="en">With an iPhone on the same Apple ID, tapping the token copies it to the Mac too. Otherwise open Telegram on the Mac (app or web.telegram.org) and copy it there.</span></p>
+      </details>
+      <details>
+        <summary><span lang="ko">토큰을 실수로 채팅에 붙여넣었어요</span><span lang="en">I pasted the token into a chat by mistake</span></summary>
+        <p><span lang="ko">@BotFather에서 <code>/revoke</code>로 토큰을 새로 받고, AI에게 “새 토큰으로 바꿔 줘”라고 하면 돼요.</span><span lang="en">Send <code>/revoke</code> to @BotFather for a new token, then ask the AI to switch to it.</span></p>
+      </details>
+      <details>
+        <summary><span lang="ko">“사용량 한도” 메시지가 와요</span><span lang="en">I get a “usage limit” message</span></summary>
+        <p><span lang="ko">Claude 사용량이 다 찬 거예요. Codex에 로그인해 두면 자동으로 넘어가고, 아니면 안내된 시간 이후에 다시 이어서 해요.</span><span lang="en">Claude's usage is used up. With Codex logged in it switches automatically; otherwise it picks up after the reset time it mentions.</span></p>
+      </details>
+      <details>
+        <summary><span lang="ko">지우고 싶어요</span><span lang="en">How do I remove it?</span></summary>
+        <p><span lang="ko">Paseo 에이전트에게 “텔레그램 오케 지워 줘”라고 하세요. 파일은 휴지통으로 가요. 마지막으로 @BotFather에서 <code>/deletebot</code>으로 봇을 지우면 끝이에요.</span><span lang="en">Ask a Paseo agent to “remove the Telegram orchestrator”. Files go to the Trash. Finally delete the bot in @BotFather with <code>/deletebot</code>.</span></p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <img src="https://brand.sundayable.ca/downloads/v2/logos/sundayable-wordmark-ink.svg" alt="Sundayable">
+    <span><a href="https://github.com/Sundayable/paseo-telegram-kit">GitHub</a> · MIT · <span lang="ko">Paseo와 텔레그램은 각 회사의 상표예요. 이 키트는 <a href="https://sundayable.com">Sundayable</a>이 만들었어요.</span><span lang="en">Paseo and Telegram are trademarks of their owners. Kit made by <a href="https://sundayable.com">Sundayable</a>.</span></span>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+  const body = document.body;
+  const setLang = (lang) => {
+    body.classList.toggle("en", lang === "en");
+    document.documentElement.lang = lang;
+    document.title = lang === "en" ? "Paseo Telegram Kit · Run the AI on your Mac from Telegram" : "텔레그램 오케 키트 · 휴대폰으로 내 Mac의 AI에게 일 시키기";
+    document.querySelectorAll(".langs button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.set === lang)));
+    try { localStorage.setItem("tgkit-lang", lang); } catch {}
+  };
+  document.querySelectorAll(".langs button").forEach((b) => b.addEventListener("click", () => setLang(b.dataset.set)));
+  const saved = (() => { try { return localStorage.getItem("tgkit-lang"); } catch { return null; } })();
+  setLang(new URLSearchParams(location.search).get("lang") || saved || "ko");
+
+  const toast = document.getElementById("toast");
+  const show = (text) => { toast.textContent = text; toast.classList.add("on"); setTimeout(() => toast.classList.remove("on"), 1800); };
+  document.querySelectorAll("[data-copy]").forEach((button) => button.addEventListener("click", async () => {
+    const lang = body.classList.contains("en") ? "en" : "ko";
+    const text = document.querySelector(`${button.dataset.copy} [lang="${lang}"]`).textContent.trim();
+    try { await navigator.clipboard.writeText(text); show(lang === "en" ? "Copied. Paste it into Paseo." : "복사했어요. Paseo에 붙여넣으세요."); }
+    catch { show(lang === "en" ? "Select the text and copy it." : "문장을 길게 눌러 복사해 주세요."); }
+  }));
+</script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+{
+  "ownerName": "Mina",
+  "language": "ko",
+  "replyLanguage": "Korean",
+  "timeZone": "America/Vancouver",
+  "orchestratorTitle": "텔레그램 오케",
+  "orchestratorCwd": "/tmp/paseo-work",
+  "defaultModel": "claude-opus-5-5",
+  "modelAliases": { "opus": "claude-opus-5-5", "fable": "claude-fable-5-1" },
+  "seats": [
+    {
+      "key": "main",
+      "label": "메인 오케",
+      "profileId": "agent_profile_fixture_main",
+      "nameHint": "메인 오케",
+      "fallback": { "provider": "claude", "model": "claude-opus-5-5", "modeId": "bypassPermissions", "thinkingOptionId": "medium" }
+    },
+    {
+      "key": "cursor",
+      "label": "백업 오케 · Cursor Opus 5.5",
+      "profileId": "agent_profile_fixture_cursor",
+      "nameHint": "Cursor Opus 5.5",
+      "fallback": { "provider": "cursor", "model": "claude-opus-5-5", "modeId": "agent", "thinkingOptionId": "medium", "featureValues": { "auto_accept": true } }
+    },
+    {
+      "key": "codex",
+      "label": "백업 오케 · Codex Astra",
+      "profileId": "agent_profile_fixture_codex",
+      "nameHint": "백업 오케 · Codex",
+      "fallback": { "provider": "codex", "model": "gpt-6-astra", "modeId": "full-access", "thinkingOptionId": "medium" }
+    }
+  ],
+  "usagePanel": true,
+  "workerRouting": ""
+}
