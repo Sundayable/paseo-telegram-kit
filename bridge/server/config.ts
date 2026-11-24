@@ -76,6 +76,8 @@ export interface OrchestratorSettings {
   /** Slack lane (optional): the bot's name in Slack, and the owner's own Slack user id. */
   slackName: string;
   slackOwnerId: string;
+  /** Bot user ids of other agents (Dan's Cello…) allowed to ask, a few times per thread. */
+  slackAgentIds: string[];
   /** The owner's name in English Slack replies ("Lauren"); defaults to ownerName. */
   ownerNameEn: string;
 }
@@ -119,6 +121,7 @@ export const DEFAULT_SETTINGS: OrchestratorSettings = {
   workerRouting: "",
   slackName: "assistant",
   slackOwnerId: "",
+  slackAgentIds: [],
   ownerNameEn: "",
 };
 
@@ -153,6 +156,7 @@ export function loadSettings(file = PATHS.configFile): OrchestratorSettings {
     workerRouting: typeof raw.workerRouting === "string" ? raw.workerRouting.trim() : DEFAULT_SETTINGS.workerRouting,
     slackName: text(raw.slackName, DEFAULT_SETTINGS.slackName),
     slackOwnerId: text(raw.slackOwnerId, DEFAULT_SETTINGS.slackOwnerId),
+    slackAgentIds: Array.isArray(raw.slackAgentIds) ? raw.slackAgentIds.filter((id): id is string => typeof id === "string" && /^[UW][A-Z0-9]+$/.test(id)) : [],
     ownerNameEn: text(raw.ownerNameEn, text(raw.ownerName, DEFAULT_SETTINGS.ownerName)),
   };
 }

@@ -96,6 +96,7 @@ export function startRuntime(log: (line: string) => void): Runtime {
         api: slackApi,
         store: new SlackStore(PATHS.slackStateFile),
         ownerSlackId: SETTINGS.slackOwnerId || null,
+        agentIds: SETTINGS.slackAgentIds,
         downloadDir: PATHS.slackDownloadDir,
         auditFile: PATHS.slackAuditFile,
         log,

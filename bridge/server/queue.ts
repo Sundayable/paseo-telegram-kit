@@ -20,12 +20,16 @@ export interface QueuedItem {
   at: number;
   /** The owner's Telegram message ids this item came from. */
   messageIds: number[];
+  /** A Slack request the owner wrote themselves: their own words, so it can approve a send. */
+  fromOwner?: boolean;
 }
 
 export interface InFlightBatch {
   text: string;
   messageIds: number[];
   startedAt: number;
+  /** The owner's newest words in the batch; only such a turn may start new Slack messages. */
+  approval?: { quote: string; at: number } | null;
 }
 
 export interface QueueData {

@@ -50,6 +50,16 @@ export interface SlackUser {
   teamId: string | null;
 }
 
+export interface SlackMember {
+  id?: string;
+  name?: string;
+  real_name?: string;
+  profile?: { real_name?: string; display_name?: string };
+  deleted?: boolean;
+  is_bot?: boolean;
+  is_app_user?: boolean;
+}
+
 export interface SlackIdentity {
   botUserId: string;
   botId: string;
@@ -180,6 +190,25 @@ export class SlackApi {
       if (!cursor) break;
     }
     return ids;
+  }
+
+  /** Everyone in the workspace, for turning @Name into a real mention. */
+  async members(): Promise<SlackMember[]> {
+    const out: SlackMember[] = [];
+    let cursor: string | undefined;
+    for (let page = 0; page < 10; page += 1) {
+      const res = await this.call<{ members?: SlackMember[]; response_metadata?: { next_cursor?: string } }>("users.list", { limit: 200, cursor });
+      out.push(...(res.members ?? []));
+      cursor = res.response_metadata?.next_cursor || undefined;
+      if (!cursor) break;
+    }
+    return out;
+  }
+
+  /** The DM channel with one person (opens it if needed). */
+  async openDm(userId: string): Promise<string> {
+    const res = await this.call<{ channel: { id: string } }>("conversations.open", { users: userId });
+    return res.channel.id;
   }
 
   /** Saves a file teammates attached; refuses Slack's HTML login page and anything over `limit`. */

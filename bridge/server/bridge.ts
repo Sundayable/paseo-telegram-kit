@@ -30,6 +30,7 @@ import { finalAssistantText, latestErrors } from "./timeline.ts";
 import { renderUsageCard, usageButtons, type UsageCardSnapshot } from "./usage-card.ts";
 import { ownerWith, t } from "./i18n.ts";
 import { replyContextLine } from "./reply-context.ts";
+import { approvalOf } from "./slack-lane.ts";
 
 export interface BridgeOptions {
   telegram: TelegramPort;
@@ -65,10 +66,10 @@ export interface BridgeOptions {
 }
 
 export interface SlackHooks {
-  /** Carried with any batch that holds a Slack request. */
+  /** Carried with every batch while the lane is on. */
   readonly rules: string;
   delivered(itemIds: readonly string[]): void;
-  route(finalText: string): Promise<{ rest: string; posted: number }>;
+  route(finalText: string, approval: { quote: string; at: number } | null): Promise<{ rest: string; posted: number }>;
   settle(): Promise<void>;
 }
 
@@ -434,9 +435,9 @@ export class Bridge {
     return { queued: true, busy };
   }
 
-  /** A quiet status line in the owner's Telegram. */
-  async notice(html: string): Promise<void> {
-    await this.say(html, undefined, undefined, true);
+  /** A status line in the owner's Telegram; quiet unless `loud`. */
+  async notice(html: string, loud = false): Promise<void> {
+    await this.say(html, undefined, undefined, !loud);
   }
 
   /** Busy while a turn runs, and for a short grace after a send before Paseo reports it. */
@@ -522,7 +523,7 @@ export class Bridge {
     // Existing seats retain their creation-time prompt until rotation. Carry the current
     // routing with each batch so a config reload also updates an already-running seat.
     const slackIds = items.filter((item) => item.kind === "slack").map((item) => item.id);
-    const rules = slackIds.length && this.options.slack ? `${BATCH_RULES}\n\n${this.options.slack.rules}` : BATCH_RULES;
+    const rules = this.options.slack ? `${BATCH_RULES}\n\n${this.options.slack.rules}` : BATCH_RULES;
     const routedBatch = `${rules}\n\n${batchText}`;
     const prompt = handoff ? `${handoff}\n\n${routedBatch}` : routedBatch;
     const current = this.state.data.orchestratorId;
@@ -557,7 +558,7 @@ export class Bridge {
     }
     this.deliveredAt = this.now();
     this.options.queue.remove(items.map((item) => item.id));
-    this.options.queue.setInFlight({ text: batchText, messageIds, startedAt: this.now() });
+    this.options.queue.setInFlight({ text: batchText, messageIds, startedAt: this.now(), approval: approvalOf(items) });
     if (slackIds.length) this.options.slack?.delivered(slackIds);
     if (this.permissionTimer && !this.options.queue.data.items.some((item) => item.kind === "permission")) {
       clearTimeout(this.permissionTimer);
@@ -1697,7 +1698,8 @@ export class Bridge {
         if (this.state.data.lastPrompt) this.state.data.lastPrompt.answered = true;
         this.state.save();
         if (this.options.slack) {
-          const routed = await this.options.slack.route(finalText).catch((error) => {
+          const approval = this.options.queue.data.inFlight?.approval ?? null;
+          const routed = await this.options.slack.route(finalText, approval).catch((error) => {
             this.options.log(`slack route failed: ${errorText(error)}`);
             return { rest: finalText, posted: 0 };
           });
