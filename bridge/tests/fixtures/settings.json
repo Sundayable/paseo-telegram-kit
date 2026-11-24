@@ -31,5 +31,7 @@
     }
   ],
   "usagePanel": true,
-  "workerRouting": ""
+  "workerRouting": "",
+  "slackName": "seoro",
+  "ownerNameEn": "Mina"
 }

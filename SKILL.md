@@ -169,6 +169,16 @@ EN:
 
 Voice notes are transcribed with OpenAI's API (paid by the user's own OpenAI account, a few cents per hour of audio). Only if they want it: they create a key at https://platform.openai.com/api-keys, copy it, and you run `bash "$KIT/scripts/set-voice-key.sh" --clipboard`, then `bash "$KIT/scripts/install.sh"` again to reload the bridge.
 
+## Optional: Slack (teammates ask your orchestrator, Cello-style)
+
+Teammates DM the Slack bot or @mention it in a channel it was invited to; the request joins the orchestrator's queue as `슬랙 요청`, and the orchestrator answers in that Slack thread on the owner's behalf. The owner gets a quiet Telegram copy of each request and answer. Anything risky still needs the owner's yes in Telegram. It runs over Socket Mode from this Mac, so no server is needed; messages that arrive while the Mac sleeps are answered after it wakes (top-level DMs and mentions; a mention inside a thread can be missed).
+
+1. Create the app from `slack/manifest.json` (api.slack.com/apps → Create New App → From a manifest; change `name`/`display_name` first), then **Install to Workspace**.
+2. Save the Bot User OAuth Token (OAuth & Permissions) and an app-level token with `connections:write` (Basic Information → App-Level Tokens): copy each, then `bash "$KIT/scripts/set-slack-token.sh" --clipboard`.
+3. In `~/.paseo/telegram-orchestrator/config.json` set `slackName` (the bot's name), `slackOwnerId` (the owner's Slack member id) and `ownerNameEn` (name used in English replies). Optional: `slackAgentIds` (bot user ids of other agents, such as a teammate's orchestrator, that may ask a few times per thread and can approve nothing) and `slackRelayedOk: true` (a teammate passing on "the owner said OK" counts as approval; off by default).
+   With the owner's go, the orchestrator can also start a DM or channel post: `[[슬랙DM:@Name: …]]`.
+4. `bash "$KIT/scripts/install.sh"`; the bridge log should show `slack lane on as @…` and `slack: connected`. Audit log: `~/.paseo/telegram-orchestrator/slack.jsonl`.
+
 ## Troubleshooting
 
 Always start with `bash "$KIT/scripts/doctor.sh"`; the failing line says what's wrong. Bridge log: `"$PASEO_BIN" plugin logs telegram-orchestrator` (`/Applications/Paseo.app/Contents/Resources/bin/paseo`).

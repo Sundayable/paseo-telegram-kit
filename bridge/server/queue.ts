@@ -6,10 +6,10 @@ import { dirname } from "node:path";
 // Messages for the orchestrator seat wait here instead of interrupting its turn.
 // Kept on disk so a plugin or daemon restart never loses one.
 
-export type QueueKind = "owner" | "worker" | "permission";
+export type QueueKind = "owner" | "worker" | "permission" | "slack";
 
 export interface QueuedItem {
-  /** Stable id: "tg:<update_id>", "worker:<agent>:<turn>", "perm:<agent>:<request>". */
+  /** Stable id: "tg:<update_id>", "worker:<agent>:<turn>", "perm:<agent>:<request>", "slack:<request>". */
   id: string;
   kind: QueueKind;
   /** Overrides the kind's label in the batch line. */
@@ -20,12 +20,18 @@ export interface QueuedItem {
   at: number;
   /** The owner's Telegram message ids this item came from. */
   messageIds: number[];
+  /** A Slack request the owner wrote themselves: their own words, so it can approve a send. */
+  fromOwner?: boolean;
+  /** A Slack request from an allowlisted agent's bot: it can never approve anything. */
+  fromAgent?: boolean;
 }
 
 export interface InFlightBatch {
   text: string;
   messageIds: number[];
   startedAt: number;
+  /** The owner's newest words in the batch; only such a turn may start new Slack messages. */
+  approval?: { quote: string; at: number; by?: string } | null;
 }
 
 export interface QueueData {
@@ -116,7 +122,7 @@ export function clock(ms: number, timeZone = SETTINGS.timeZone): string {
   return new Intl.DateTimeFormat("en-GB", { timeZone, hour: "2-digit", minute: "2-digit", hour12: false }).format(ms);
 }
 
-const LABEL: Record<Exclude<QueueKind, "owner">, string> = { worker: "Paseo 알림", permission: "Paseo 권한 요청" };
+const LABEL: Record<Exclude<QueueKind, "owner">, string> = { worker: "Paseo 알림", permission: "Paseo 권한 요청", slack: "슬랙 요청" };
 
 /** The batch-line label; the owner's own messages carry their name. */
 function kindLabel(kind: QueueKind): string {
@@ -129,7 +135,8 @@ export function formatBatch(items: readonly QueuedItem[], now: number): string {
   const oldest = Math.min(...items.map((item) => item.at));
   const stale = now - oldest > STALE_BATCH_MS ? ` (대기 중 쌓인 메시지 ${items.length}개)` : "";
   const lines = items.map((item) => `[${clock(item.at)} ${item.label ?? kindLabel(item.kind)}] ${item.text}`);
-  return [`[텔레그램] 메시지 ${items.length}개, 순서대로${stale}:`, ...lines].join("\n");
+  const source = items.every((item) => item.kind === "slack") ? "[슬랙]" : "[텔레그램]";
+  return [`${source} 메시지 ${items.length}개, 순서대로${stale}:`, ...lines].join("\n");
 }
 
 /** Sent when a correction interrupts the running turn. */
