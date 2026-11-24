@@ -69,7 +69,7 @@ export interface SlackHooks {
   /** Carried with every batch while the lane is on. */
   readonly rules: string;
   delivered(itemIds: readonly string[]): void;
-  route(finalText: string, approval: { quote: string; at: number } | null): Promise<{ rest: string; posted: number }>;
+  route(finalText: string, approval: { quote: string; at: number; by?: string } | null): Promise<{ rest: string; posted: number }>;
   settle(): Promise<void>;
 }
 

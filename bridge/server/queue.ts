@@ -22,6 +22,8 @@ export interface QueuedItem {
   messageIds: number[];
   /** A Slack request the owner wrote themselves: their own words, so it can approve a send. */
   fromOwner?: boolean;
+  /** A Slack request from an allowlisted agent's bot: it can never approve anything. */
+  fromAgent?: boolean;
 }
 
 export interface InFlightBatch {
@@ -29,7 +31,7 @@ export interface InFlightBatch {
   messageIds: number[];
   startedAt: number;
   /** The owner's newest words in the batch; only such a turn may start new Slack messages. */
-  approval?: { quote: string; at: number } | null;
+  approval?: { quote: string; at: number; by?: string } | null;
 }
 
 export interface QueueData {

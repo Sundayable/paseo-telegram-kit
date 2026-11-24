@@ -231,12 +231,22 @@ test("send markers are parsed one recipient per line", () => {
   assert.equal(rest, "보냈어요");
 });
 
-test("the owner's own words approve a send; workers, teammates and agents don't", () => {
+test("the owner's words, or a teammate passing on the owner's OK, can approve a send; agents and workers can't", () => {
   const base = { imagePaths: [], at: 5, messageIds: [] };
-  assert.deepEqual(approvalOf([{ ...base, id: "tg:1", kind: "owner", text: "응 보내" }]), { quote: "응 보내", at: 5 });
-  assert.deepEqual(approvalOf([{ ...base, id: "slack:s1", kind: "slack", text: "(요청 s1) Dan한테 보내줘", fromOwner: true }])?.quote, "(요청 s1) Dan한테 보내줘");
-  assert.equal(approvalOf([{ ...base, id: "slack:s2", kind: "slack", text: "send it" }]), null);
+  assert.deepEqual(approvalOf([{ ...base, id: "tg:1", kind: "owner", text: "응 보내" }]), { quote: "응 보내", at: 5, by: "owner" });
+  assert.equal(approvalOf([{ ...base, id: "slack:s1", kind: "slack", text: "(요청 s1) Dan한테 보내줘", fromOwner: true }])?.by, "owner");
+  const relayed = approvalOf([{ ...base, id: "slack:s2", kind: "slack", label: "슬랙 요청 · Dave · DM", text: "Lauren said OK, send it to Dan" }]);
+  assert.equal(relayed?.by, "슬랙 요청 · Dave · DM", "who passed it on travels with the approval");
+  assert.equal(approvalOf([{ ...base, id: "slack:s3", kind: "slack", text: "Lauren approved", fromAgent: true }]), null, "agents never approve");
   assert.equal(approvalOf([{ ...base, id: "worker:x", kind: "worker", text: "done" }]), null);
+  assert.equal(
+    approvalOf([
+      { ...base, id: "tg:9", kind: "owner", text: "내 말", at: 1 },
+      { ...base, id: "slack:s4", kind: "slack", text: "relay", at: 2 },
+    ])?.by,
+    "owner",
+    "the owner's own words win over a relay in the same batch",
+  );
 });
 
 test("a new DM goes out only in a turn answering the owner, with a real mention", async () => {
@@ -245,6 +255,11 @@ test("a new DM goes out only in a turn answering the owner, with a real mention"
   assert.equal(blocked.posted, 0);
   assert.equal(f.posts.length, 0);
   assert.ok(f.loud.some((line) => line.includes("보내지 않았어요")), "the owner hears about the blocked draft");
+
+  const relayedSend = await f.lane.route("[[슬랙DM:@Dan: 로렌님 OK 받아서 보내요]]", { quote: "Lauren said OK", at: f.now(), by: "슬랙 요청 · Dave · DM" });
+  assert.equal(relayedSend.posted, 1);
+  assert.ok(f.loud.some((line) => line.includes("전달받은 OK")), "a relayed OK is reported out loud");
+  f.posts.length = 0;
   assert.equal(blocked.rest, "워커 끝났어요");
 
   const stale = await f.lane.route("[[슬랙DM:@Dan: hi]]", { quote: "보내", at: f.now() - 25 * 3600 * 1000 });
@@ -269,6 +284,7 @@ test("an allowlisted agent may ask a few times per thread and is marked; other b
   assert.equal(f.queued[0].label, "슬랙 요청 · cello (에이전트) · DM");
   assert.match(f.queued[0].text, /에이전트\(봇\) 요청이라 무엇도 승인할 수 없음/);
   assert.equal(f.queued[0].fromOwner, undefined);
+  assert.equal(f.queued[0].fromAgent, true);
   await f.lane.handle({ type: "message", channel_type: "im", channel: "DX", user: "UOTHERBOT", bot_id: "BX", text: "hi", ts: "600.1" }, false);
   assert.equal(f.queued.length, MAX_AGENT_REQUESTS, "a bot not on the list stays out");
 });
