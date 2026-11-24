@@ -218,7 +218,7 @@ test("@Name becomes a real mention only for one unambiguous person, never inside
   assert.equal(resolveMentions("@Dan please check, cc @dave", directory), "<@UDAN> please check, cc <@UDAVE>");
   assert.equal(resolveMentions("@Dan Jeong 확인 부탁해요", directory), "<@UDAN> 확인 부탁해요");
   assert.equal(resolveMentions("@Cello and @Nobody", directory), "@Cello and @Nobody", "bots and strangers stay plain");
-  assert.equal(resolveMentions("`@Dan` <https://x.y/@Dan|@Dan> dan@sundayable.com", directory), "`@Dan` <https://x.y/@Dan|@Dan> dan@sundayable.com");
+  assert.equal(resolveMentions("`@Dan` <https://x.y/@Dan|@Dan> dan@example.com", directory), "`@Dan` <https://x.y/@Dan|@Dan> dan@example.com");
   assert.equal(resolveMentions("@kim", directory), "@kim", "a first name two people share stays plain");
 });
 
