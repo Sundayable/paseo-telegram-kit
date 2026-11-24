@@ -60,6 +60,16 @@ export interface BridgeOptions {
   usagePanel?: boolean;
   /** Where rotation handoffs are written. */
   handoffDir?: string;
+  /** Optional Slack lane: teammates' requests in, the seat's `[[슬랙…]]` lines out. */
+  slack?: SlackHooks;
+}
+
+export interface SlackHooks {
+  /** Carried with any batch that holds a Slack request. */
+  readonly rules: string;
+  delivered(itemIds: readonly string[]): void;
+  route(finalText: string): Promise<{ rest: string; posted: number }>;
+  settle(): Promise<void>;
 }
 
 export interface HookAgent {
@@ -416,6 +426,19 @@ export class Bridge {
     else await this.scheduleFlush();
   }
 
+  /** Another lane (Slack) hands the seat a message; an idle seat gets it at once. */
+  async enqueue(item: QueuedItem): Promise<{ queued: boolean; busy: boolean }> {
+    const busy = await this.isSeatBusy();
+    if (!this.options.queue.push(item)) return { queued: false, busy };
+    if (!busy) await this.scheduleFlush();
+    return { queued: true, busy };
+  }
+
+  /** A quiet status line in the owner's Telegram. */
+  async notice(html: string): Promise<void> {
+    await this.say(html, undefined, undefined, true);
+  }
+
   /** Busy while a turn runs, and for a short grace after a send before Paseo reports it. */
   private async isSeatBusy(): Promise<boolean> {
     const id = this.state.data.orchestratorId;
@@ -498,7 +521,9 @@ export class Bridge {
     const handoff = this.state.data.seat === 0 ? this.state.data.pendingHandoff : null;
     // Existing seats retain their creation-time prompt until rotation. Carry the current
     // routing with each batch so a config reload also updates an already-running seat.
-    const routedBatch = `${BATCH_RULES}\n\n${batchText}`;
+    const slackIds = items.filter((item) => item.kind === "slack").map((item) => item.id);
+    const rules = slackIds.length && this.options.slack ? `${BATCH_RULES}\n\n${this.options.slack.rules}` : BATCH_RULES;
+    const routedBatch = `${rules}\n\n${batchText}`;
     const prompt = handoff ? `${handoff}\n\n${routedBatch}` : routedBatch;
     const current = this.state.data.orchestratorId;
     const agent = current ? await this.paseo.getAgent(current) : null;
@@ -533,6 +558,7 @@ export class Bridge {
     this.deliveredAt = this.now();
     this.options.queue.remove(items.map((item) => item.id));
     this.options.queue.setInFlight({ text: batchText, messageIds, startedAt: this.now() });
+    if (slackIds.length) this.options.slack?.delivered(slackIds);
     if (this.permissionTimer && !this.options.queue.data.items.some((item) => item.kind === "permission")) {
       clearTimeout(this.permissionTimer);
       this.permissionTimer = null;
@@ -1632,7 +1658,7 @@ export class Bridge {
   async onTurnEnded(agent: HookAgent, outcome: TurnOutcome, timeline: readonly AgentTimelineItem[]): Promise<void> {
     this.markStopped(agent.id);
     const errors = latestErrors(timeline);
-    const finalText = finalAssistantText(timeline);
+    let finalText = finalAssistantText(timeline);
 
     // The reply to a probe of the main seat decides whether to return to it; the owner never sees it.
     const probe = this.state.data.fallback?.probeSentAt;
@@ -1670,6 +1696,18 @@ export class Bridge {
         }
         if (this.state.data.lastPrompt) this.state.data.lastPrompt.answered = true;
         this.state.save();
+        if (this.options.slack) {
+          const routed = await this.options.slack.route(finalText).catch((error) => {
+            this.options.log(`slack route failed: ${errorText(error)}`);
+            return { rest: finalText, posted: 0 };
+          });
+          await this.options.slack.settle().catch((error) => this.options.log(`slack settle failed: ${errorText(error)}`));
+          finalText = routed.rest;
+          if (routed.posted && !finalText.trim()) {
+            await this.seatIdle(outcome);
+            return;
+          }
+        }
       }
     }
     await this.forwardTurn(agent, outcome, finalText, errors, isOrchestrator);

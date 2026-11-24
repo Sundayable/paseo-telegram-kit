@@ -14,6 +14,10 @@ export const PATHS = {
   stateFile: join(STATE_DIR, "state.json"),
   /** Messages waiting for the orchestrator seat. */
   queueFile: join(STATE_DIR, "queue.json"),
+  /** Slack lane: request ids, catch-up cursor, and an audit log of what came in and went out. */
+  slackStateFile: join(STATE_DIR, "slack.json"),
+  slackAuditFile: join(STATE_DIR, "slack.jsonl"),
+  slackDownloadDir: join(HOME, "Downloads/slack"),
   /** Handoffs written when the seat rotates. */
   handoffDir: join(STATE_DIR, "handoffs"),
   /** Written after every successful poll; the launchd watchdog reads it. */
@@ -69,6 +73,11 @@ export interface OrchestratorSettings {
   usagePanel: boolean;
   /** One line of worker routing carried with every batch; empty = read list_profiles notes. */
   workerRouting: string;
+  /** Slack lane (optional): the bot's name in Slack, and the owner's own Slack user id. */
+  slackName: string;
+  slackOwnerId: string;
+  /** The owner's name in English Slack replies ("Lauren"); defaults to ownerName. */
+  ownerNameEn: string;
 }
 
 const DEFAULT_SEATS: SeatDefinition[] = [
@@ -108,6 +117,9 @@ export const DEFAULT_SETTINGS: OrchestratorSettings = {
   seats: DEFAULT_SEATS,
   usagePanel: false,
   workerRouting: "",
+  slackName: "assistant",
+  slackOwnerId: "",
+  ownerNameEn: "",
 };
 
 function isSeat(value: unknown): value is SeatDefinition {
@@ -139,6 +151,9 @@ export function loadSettings(file = PATHS.configFile): OrchestratorSettings {
     seats,
     usagePanel: typeof raw.usagePanel === "boolean" ? raw.usagePanel : DEFAULT_SETTINGS.usagePanel,
     workerRouting: typeof raw.workerRouting === "string" ? raw.workerRouting.trim() : DEFAULT_SETTINGS.workerRouting,
+    slackName: text(raw.slackName, DEFAULT_SETTINGS.slackName),
+    slackOwnerId: text(raw.slackOwnerId, DEFAULT_SETTINGS.slackOwnerId),
+    ownerNameEn: text(raw.ownerNameEn, text(raw.ownerName, DEFAULT_SETTINGS.ownerName)),
   };
 }
 
@@ -178,12 +193,15 @@ export interface BridgeSecrets {
   telegramToken: string;
   chatId: number;
   openaiKey: string | null;
+  /** Both set = the Slack lane is on. */
+  slackBotToken: string | null;
+  slackAppToken: string | null;
 }
 
 
 export function readSecrets(file = PATHS.keysFile): BridgeSecrets {
   // The Telegram pair is required; OPENAI_API_KEY is optional and only turns on voice transcription.
-  const keys = parseKeysFile(readFileSync(file, "utf8"), ["TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID", "OPENAI_API_KEY"]);
+  const keys = parseKeysFile(readFileSync(file, "utf8"), ["TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID", "OPENAI_API_KEY", "SLACK_BOT_TOKEN", "SLACK_APP_TOKEN"]);
   const chatId = Number(keys.TELEGRAM_CHAT_ID);
   if (!keys.TELEGRAM_BOT_TOKEN || !Number.isSafeInteger(chatId)) {
     throw new Error(`TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID must be set in ${file}`);
@@ -192,6 +210,8 @@ export function readSecrets(file = PATHS.keysFile): BridgeSecrets {
     telegramToken: keys.TELEGRAM_BOT_TOKEN,
     chatId,
     openaiKey: keys.OPENAI_API_KEY ?? null,
+    slackBotToken: keys.SLACK_BOT_TOKEN ?? null,
+    slackAppToken: keys.SLACK_APP_TOKEN ?? null,
   };
 }
 

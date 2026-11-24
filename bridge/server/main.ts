@@ -6,6 +6,8 @@ import { botCommands } from "./commands.ts";
 import { daemonUrl, PATHS, readSecrets, SETTINGS } from "./config.ts";
 import { createPaseoPort, PaseoConnection } from "./paseo-port.ts";
 import { QueueStore } from "./queue.ts";
+import { SlackApi, SocketMode } from "./slack.ts";
+import { SlackLane, SlackStore } from "./slack-lane.ts";
 import { parseUsageCache } from "./stalls.ts";
 import { StateStore } from "./state.ts";
 import { TelegramApi, TelegramError } from "./telegram.ts";
@@ -88,6 +90,17 @@ export function startRuntime(log: (line: string) => void): Runtime {
   const connection = new PaseoConnection(() => daemonUrl());
   const openaiKey = secrets.openaiKey;
   const paseo = createPaseoPort(connection.get, () => daemonUrl());
+  const slackApi = secrets.slackBotToken && secrets.slackAppToken ? new SlackApi(secrets.slackBotToken) : null;
+  const lane = slackApi
+    ? new SlackLane({
+        api: slackApi,
+        store: new SlackStore(PATHS.slackStateFile),
+        ownerSlackId: SETTINGS.slackOwnerId || null,
+        downloadDir: PATHS.slackDownloadDir,
+        auditFile: PATHS.slackAuditFile,
+        log,
+      })
+    : null;
   const bridge = new Bridge({
     telegram,
     paseo,
@@ -105,7 +118,9 @@ export function startRuntime(log: (line: string) => void): Runtime {
       readCache: () => JSON.parse(readFileSync(PATHS.usageCache, "utf8")),
     }),
     usagePanel: SETTINGS.usagePanel,
+    slack: lane ?? undefined,
   });
+  lane?.attach(bridge);
 
   const controller = new AbortController();
   const startedAt = new Date().toISOString();
@@ -126,6 +141,21 @@ export function startRuntime(log: (line: string) => void): Runtime {
       if (SETTINGS.usagePanel) void bridge.refreshUsagePanel(true).catch(() => log("usage panel refresh failed; /usage remains available"));
     } catch (error) {
       log(`startup check failed: ${error instanceof Error ? error.message : error}`);
+    }
+    if (lane && slackApi && secrets.slackAppToken) {
+      try {
+        const me = await slackApi.identity();
+        lane.setIdentity(me);
+        new SocketMode({
+          appToken: secrets.slackAppToken,
+          onEvent: (event) => lane.onEvent(event),
+          onConnected: () => void lane.catchUp(),
+          log,
+        }).start(controller.signal);
+        log(`slack lane on as @${me.botName}`);
+      } catch (error) {
+        log(`slack lane off: ${error instanceof Error ? error.message : error}`);
+      }
     }
     await pollLoop(telegram, bridge, state, controller.signal, log, heartbeat);
   })();
