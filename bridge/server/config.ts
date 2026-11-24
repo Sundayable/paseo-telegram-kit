@@ -78,6 +78,8 @@ export interface OrchestratorSettings {
   slackOwnerId: string;
   /** Bot user ids of other agents (Dan's Cello…) allowed to ask, a few times per thread. */
   slackAgentIds: string[];
+  /** A teammate passing on "the owner said OK" counts as approval (off = only the owner's own words). */
+  slackRelayedOk: boolean;
   /** The owner's name in English Slack replies ("Lauren"); defaults to ownerName. */
   ownerNameEn: string;
 }
@@ -122,6 +124,7 @@ export const DEFAULT_SETTINGS: OrchestratorSettings = {
   slackName: "assistant",
   slackOwnerId: "",
   slackAgentIds: [],
+  slackRelayedOk: false,
   ownerNameEn: "",
 };
 
@@ -156,6 +159,7 @@ export function loadSettings(file = PATHS.configFile): OrchestratorSettings {
     workerRouting: typeof raw.workerRouting === "string" ? raw.workerRouting.trim() : DEFAULT_SETTINGS.workerRouting,
     slackName: text(raw.slackName, DEFAULT_SETTINGS.slackName),
     slackOwnerId: text(raw.slackOwnerId, DEFAULT_SETTINGS.slackOwnerId),
+    slackRelayedOk: raw.slackRelayedOk === true,
     slackAgentIds: Array.isArray(raw.slackAgentIds) ? raw.slackAgentIds.filter((id): id is string => typeof id === "string" && /^[UW][A-Z0-9]+$/.test(id)) : [],
     ownerNameEn: text(raw.ownerNameEn, text(raw.ownerName, DEFAULT_SETTINGS.ownerName)),
   };

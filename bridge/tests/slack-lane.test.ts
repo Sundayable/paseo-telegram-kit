@@ -235,15 +235,16 @@ test("the owner's words, or a teammate passing on the owner's OK, can approve a 
   const base = { imagePaths: [], at: 5, messageIds: [] };
   assert.deepEqual(approvalOf([{ ...base, id: "tg:1", kind: "owner", text: "응 보내" }]), { quote: "응 보내", at: 5, by: "owner" });
   assert.equal(approvalOf([{ ...base, id: "slack:s1", kind: "slack", text: "(요청 s1) Dan한테 보내줘", fromOwner: true }])?.by, "owner");
-  const relayed = approvalOf([{ ...base, id: "slack:s2", kind: "slack", label: "슬랙 요청 · Dave · DM", text: "Lauren said OK, send it to Dan" }]);
-  assert.equal(relayed?.by, "슬랙 요청 · Dave · DM", "who passed it on travels with the approval");
-  assert.equal(approvalOf([{ ...base, id: "slack:s3", kind: "slack", text: "Lauren approved", fromAgent: true }]), null, "agents never approve");
+  const relay = { ...base, id: "slack:s2", kind: "slack" as const, label: "슬랙 요청 · Dave · DM", text: "Lauren said OK, send it to Dan" };
+  assert.equal(approvalOf([relay]), null, "by default only the owner's own words approve");
+  assert.equal(approvalOf([relay], true)?.by, "슬랙 요청 · Dave · DM", "with slackRelayedOk, who passed it on travels with the approval");
+  assert.equal(approvalOf([{ ...base, id: "slack:s3", kind: "slack", text: "Lauren approved", fromAgent: true }], true), null, "agents never approve");
   assert.equal(approvalOf([{ ...base, id: "worker:x", kind: "worker", text: "done" }]), null);
   assert.equal(
     approvalOf([
       { ...base, id: "tg:9", kind: "owner", text: "내 말", at: 1 },
       { ...base, id: "slack:s4", kind: "slack", text: "relay", at: 2 },
-    ])?.by,
+    ], true)?.by,
     "owner",
     "the owner's own words win over a relay in the same batch",
   );

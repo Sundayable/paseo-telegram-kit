@@ -175,7 +175,8 @@ Teammates DM the Slack bot or @mention it in a channel it was invited to; the re
 
 1. Create the app from `slack/manifest.json` (api.slack.com/apps → Create New App → From a manifest; change `name`/`display_name` first), then **Install to Workspace**.
 2. Save the Bot User OAuth Token (OAuth & Permissions) and an app-level token with `connections:write` (Basic Information → App-Level Tokens): copy each, then `bash "$KIT/scripts/set-slack-token.sh" --clipboard`.
-3. In `~/.paseo/telegram-orchestrator/config.json` set `slackName` (the bot's name), `slackOwnerId` (the owner's Slack member id) and `ownerNameEn` (name used in English replies).
+3. In `~/.paseo/telegram-orchestrator/config.json` set `slackName` (the bot's name), `slackOwnerId` (the owner's Slack member id) and `ownerNameEn` (name used in English replies). Optional: `slackAgentIds` (bot user ids of other agents, such as a teammate's orchestrator, that may ask a few times per thread and can approve nothing) and `slackRelayedOk: true` (a teammate passing on "the owner said OK" counts as approval; off by default).
+   With the owner's go, the orchestrator can also start a DM or channel post: `[[슬랙DM:@Name: …]]`.
 4. `bash "$KIT/scripts/install.sh"`; the bridge log should show `slack lane on as @…` and `slack: connected`. Audit log: `~/.paseo/telegram-orchestrator/slack.jsonl`.
 
 ## Troubleshooting
